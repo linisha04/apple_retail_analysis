@@ -273,10 +273,6 @@ ORDER BY store_name, month;
 -- Analyze product sales trends over time, segmented into key periods: from launch to 6 months, 6-12 months, 12-18 months, and beyond 18 months.
 
 
-
-
-
-
 WITH product_age_sales AS (
     SELECT
         p.product_id,
@@ -289,25 +285,36 @@ WITH product_age_sales AS (
     FROM sales s
     JOIN products p ON s.product_id = p.product_id
     WHERE s.sale_date >= p.launch_date
+),
+period_summary AS (
+    SELECT
+        CASE
+            WHEN months_since_launch <= 6 THEN '0-6 months'
+            WHEN months_since_launch <= 12 THEN '6-12 months'
+            WHEN months_since_launch <= 18 THEN '12-18 months'
+            ELSE '18+ months'
+        END AS period,
+        SUM(sale_amount) AS total_sales,
+        COUNT(*) AS total_transactions,
+        COUNT(DISTINCT product_id) AS num_products
+    FROM product_age_sales
+    GROUP BY 
+        CASE
+            WHEN months_since_launch <= 6 THEN '0-6 months'
+            WHEN months_since_launch <= 12 THEN '6-12 months'
+            WHEN months_since_launch <= 18 THEN '12-18 months'
+            ELSE '18+ months'
+        END
 )
-SELECT
-    CASE
-        WHEN months_since_launch <= 6 THEN '0-6 months'
-        WHEN months_since_launch <= 12 THEN '6-12 months'
-        WHEN months_since_launch <= 18 THEN '12-18 months'
-        ELSE '18+ months'
-    END AS period,
-    SUM(sale_amount) AS total_sales,
-    COUNT(*) AS total_transactions,
-    COUNT(DISTINCT product_id) AS num_products
-FROM product_age_sales
-GROUP BY period
+SELECT *
+FROM period_summary
 ORDER BY 
     CASE 
         WHEN period = '0-6 months' THEN 1
         WHEN period = '6-12 months' THEN 2
-        WHEN per
-
+        WHEN period = '12-18 months' THEN 3
+        ELSE 4
+    END;
 
 
 
